@@ -80,6 +80,9 @@ Døme på access_token
 Dersom avsender nyttar ein systemleverandør, so vil tokenet ogso ha eit `supplier`-claim som inneheld systemleverandørens organisasjonsnummer.
 
 
+Avsender konstruerer en forretningsmelding, og putter access_token inni denne
+
+
 
 TODO: Avsender signerer dokument-pakke.   Må/bør dette vere samme sertiifkat som opp mot maskinporten ?   Og kva viss det er Databehandler som signerer ?  Korleis kan PK-leverandør kontrollere denne signaturen?  
 
@@ -101,6 +104,7 @@ Content-Type: application/json
 
 {
     "ConversationId": "37efbd4c-413d-4e2c-bbc5-257ef4a65a45",
+    "maskinporten_token": eyJA....
     "digital": {
         "sikkerhetsnivaa": "",
         "hoveddokument": "",
@@ -186,6 +190,7 @@ Ved mottak av melding, må postkasse-leverandør validere ende-til-ende integrit
 a: at forretningsmelding er signert og inneholder en digest av den dokumentpakken som skal være tilhørende foretningsmeldinga
 b: at dokumentpakken er signert
 c: regne ut digest av dokumentpakken og kontrollere at utrekna digest stemmer med påstått verdi i forretningsmeldinga
+d: validere at Avsender i forretningsmeldinger stemmer med `consumer` i `maskinporten_token` i forretningsmeldinga.
 
 d: på-en-eller-annen-måte validere at privat-nøkkelen som er brukt til å signere i pkt a-c tilhører avsender.
 
