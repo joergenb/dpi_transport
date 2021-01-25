@@ -25,9 +25,9 @@ Aksesspunkt-leverandør i Hjørne 2 tilbyr enkle REST-endepunkt mot Avsender for
 
 Digdir gjev Avsender tilgang i Maskinporten til oauth2-scopet `dpi:send`  når bruksvilkår for Digital Postkasse er inngått.
 
-Avsender som skal setje opp sitt eige system, må få tilgang til Samarbeidsportalen (i Prod) og registere ein maskinporten-integrasjon med det aktuelle scopet.  Fagsystemet/oauth2-klieten må konfigurerast med den genererte `client_id` og Avsender sitt virksomheitssertifikat.
+Alt 1: Avsender som skal setje opp sitt eige system, må få tilgang til Samarbeidsportalen (i Prod) og registere ein maskinporten-integrasjon med det aktuelle scopet.  Fagsystemet/oauth2-klieten må konfigurerast med den genererte `client_id` og Avsender sitt virksomheitssertifikat.
 
-Avsender som nyttar systemleverandør/databehandlar, må istaden logge inn i Altinn og delegere tilgangen til å sende DPI, vidare til systemleverandør.   Systemleverandør må få tilgang til Samarbeidsportalen og lage Maskinporten-integrasjon på same måte som sjølvstendige avsendere. Merk at systemleverandør autentiserer seg mot Maskinporten med sitt eige virksomheitsertifikat, og treng ikkje ha Avsender sitt.
+Alt 2: Avsender som nyttar systemleverandør/databehandlar, må istaden logge inn i Altinn og delegere tilgangen til å sende DPI, vidare til systemleverandør.   Systemleverandør må få tilgang til Samarbeidsportalen og lage Maskinporten-integrasjon på same måte som sjølvstendige avsendere. Merk at systemleverandør autentiserer seg mot Maskinporten med sitt eige virksomheitsertifikat, og treng ikkje ha Avsender sitt.
 
 Avsender (evt. systemleverandør) inngår so ein avtale med ein aksesspunkt-leverandør.  Fagsystemet blir konfigureret og integerert mot aksesspunktleverandør.
 
@@ -39,17 +39,18 @@ Aksesspunktleverandør skal tilby følgjande endepunkt:
 - POST /send/fysiskpostmelding/{meldingsid}
 - GET /kvittering/{id}
 
-evt:
-- POST /flytt/digitalpost/
-
-
-Payload i sende-operasjoner er ein multipart, i to delar
+Payload i sende-operasjoner er ein multipart med to delar
 1. Forretningsmelding, TODO:  forenkla til JSON istadenfor XML.
 2. Dokumentpakke (ingen endringer i ASiC-pakke)
 
-Avsender-informasjon kjem frå tokenet direkte.
+Autorisert avsender-informasjon kjem frå Maskinporten-tokenet direkte, og ikkje lenger frå signerte ebMS-meldingar.
+
 
 TODO: trengs serializering  av JSON/XML ?
+TODO: kva med PUT og DELETE på tidlegare innsendt melding
+TODO: kva med store filer /mange vedlegg?
+TODO: kva med POST /flytt/digitalpost/
+
 
 ## Eksempel på å sende melding
 
@@ -58,7 +59,7 @@ TODO: trengs serializering  av JSON/XML ?
 Fagsystem signerer eit JWT grant ihht https://docs.digdir.no/maskinporten_protocol_jwtgrant.html, sender dette til Maskinporten og får  eit access_token i retur.
 
 - Maskinporten sjekkar at Avsender har lov til å bruka DPI.
-- Viss Avsender har databehandler, sjekkar Maskinporten mot Altinn Autorisasjon at aktuell autentisert Databehandlar har lov til å opptre på vegne av Avsender.
+- Viss Avsender har databehandler, sjekkar Maskinporten mot Altinn Autorisasjon at aktuell autentisert Databehandlar har fått lov til å opptre på vegne av Avsender for sending av DPI.
 
 
 Døme på access_token
@@ -82,7 +83,7 @@ Dersom avsender nyttar ein systemleverandør, so vil tokenet ogso ha eit `suppli
 
 TODO: Avsender signerer dokument-pakke.   Må/bør dette vere samme sertiifkat som opp mot maskinporten ?   Og kva viss det er Databehandler som signerer ?  Korleis kan PK-leverandør kontrollere denne signaturen?  
 
-
+`meldingsid` og `ConversationId` må ha tilstrekkeleg entropi til at den vil vere unik over alle meldinger frå alle avsendere over tid.
 
 **2:   Avsender sender post-melding**
 
@@ -128,19 +129,25 @@ Content-Type: application/json
 Content-Disposition: form-data; name="dokumentpakke"
 Content-Transfer-Encoding: chunked
 
-xxxxxx
+<ASiC dokumentpakke; stor klump med alle dokument og vedlegg>
 
 ```
 
 TODO:  trengs payload signerast?
+TODO: finst det betre handtering av store dok og/eller mange vedlegg ?
+
 
 **3: Aksesspunkt-leverandør mottek melding**
 
-Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).
+Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).  
+- Utgått token medfører 401-respons
+- Gylidg token men ikkje "dpi:send"-scope eller manglande avtale med APL -> 403 repons
 
 Aksesspunktleverandør må validere at `consumer`-claimet i token stemmer med DigitalPostMelding/Avsender i forretningsmelding.
 
 Aksesspunkt-leverandørar *bør* bruke [audience-begrensa](https://docs.digdir.no/maskinporten_func_audience_restricted_tokens.html) token, slik at ikkje avsender sitt fagsystem ved uhell eller forsett sender post til ein annan aksesspunkt-leverandør enn dei har avtale med.
+
+Aksesspunktleverandør må validere at meldingsid ikkje er forsøkt brukt tidlegare.
 
 
 **4: Aksesspunkt-leverandør sender meldinga vidare**
