@@ -182,4 +182,18 @@ TODO: er vi sårbare for at hjørne 3 kan modifisere relle meldingar,  eller inj
 
 **6: Hjørne 4 mottek meldinga og puttar i postkassen til innnbygger**
 
-postkasse treng ikkje lenger validere at Manifest/Avsender
+Ved mottak av melding, må postkasse-leverandør validere ende-til-ende integritet, dvs:
+a: at forretningsmelding er signert og inneholder en digest av den dokumentpakken som skal være tilhørende foretningsmeldinga
+b: at dokumentpakken er signert
+c: regne ut digest av dokumentpakken og kontrollere at utrekna digest stemmer med påstått verdi i forretningsmeldinga
+
+d: på-en-eller-annen-måte validere at privat-nøkkelen som er brukt til å signere i pkt a-c tilhører avsender.
+
+# Kvitteringer
+
+PK-leverandør må kunne asynkront sende kvittering tilbake i C3 -> C2 -> C1.  (dvs C3 må tilby et API eller mekanisme der PK-leverandør kan overføre kvitteringer, og dette må ta høyde for at slik kvitteringlevering skal kunne være asynkront av levereing av digitalpostmelding C3->C4.)
+
+
+# 2-vegs svar
+
+TODO
