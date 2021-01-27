@@ -77,12 +77,13 @@ Døme på access_token
   }
 ```
 
-Dersom avsender nyttar ein systemleverandør, so vil tokenet ogso ha eit `supplier`-claim som inneheld systemleverandørens organisasjonsnummer.
+Dersom avsender nyttar ein Databehandler, so vil tokenet ogso ha eit `supplier`-claim som inneheld systemleverandørens organisasjonsnummer.
 
 
-Avsender konstruerer en forretningsmelding, og putter access_token inni denne
-
-
+Avsender konstruerer en **forretningsmelding**
+* token mottatt fra Maskinporten puttes i `maskinporten_token`.
+* Avsender må sjekke KRR for å finne hvilken postkasse avsender benytter, og sette `postkasseorg` lik postkassens orgno.
+* Avsneder må sette `processID` til korrekt verdi, alt etter om det er fysisk post (TODO: verdi) eller digital post (TODO: verdi)
 
 TODO: Avsender signerer dokument-pakke.   Må/bør dette vere samme sertiifkat som opp mot maskinporten ?   Og kva viss det er Databehandler som signerer ?  Korleis kan PK-leverandør kontrollere denne signaturen?  
 
@@ -113,6 +114,8 @@ Authorization: Bearer <maskinporten_token m/ dpi:send scope>
 
     // forretningsmelding under her:
     "digital": {
+        "orgnummer_til_postkasse": 999888777,
+        "processid": // C1 slå
         "sikkerhetsnivaa": "",
         "hoveddokument": "",
         "avsenderId": "", // valgfri
@@ -163,25 +166,16 @@ Aksesspunktleverandør må validere at meldingsid ikkje er forsøkt brukt tidleg
 
 **4: Aksesspunkt-leverandør sender meldinga vidare**
 
+APL ser på forretningsmelding og lager en PEPPOL-SBDH.
+
+APL finner `Receiever`
 
 TODO:  må APL "pakke om" meldinga før den sendes vidare i PEPPOL ?, td:
 - Aksesspunktleverandør kopierer Avsenders orgno frå `consumer`-claim i token, inn i forretningsmeldinga som `avsender`
 - Aksesspunktleverandør kopierer Databehandlers orgno frå `supplier`-claim i token, inn i forretningsmelidnga som `databehandler`
 
 ```
-{
-    "ConversationId": "37efbd4c-413d-4e2c-bbc5-257ef4a65a45",
-    "digital": {
-        "sikkerhetsnivaa": "",
-        "hoveddokument": "",
-        "avsenderId": "", // valgfri
-        "tittel": "",
-        "spraak": "NO",
-        "avsender": {
-          "Identifier": {
-            "Authority": "iso6523-actorid-upis",
-            "ID": "0192:991825827"
-          }
+
 ```
 
 
