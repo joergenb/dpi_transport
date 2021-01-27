@@ -1,27 +1,91 @@
+Dette dokumentet er eit framlegg til nytt, proprietært REST-api sikret med Maskinporten, for å sende Digital Post til Innbygger.
+
+
 # Bakgrunn
 
- Den proprietære transportinfrastrukturen for Digital Postkasse til innbyggere skal endrast til å bruke ein standard-infrastruktur for meldingsutvekling i det offentlege.
+Den proprietære transportinfrastrukturen for Digital Postkasse til innbyggere skal erstattes med en standard-infrastruktur for meldingsutvekling i det offentlege, dvs 4-hjørnes-modell med CEF eDelivery/PEPPOL:
+- Hjørne 1: Avsender (og evt. avsender sin leverandør/databehandler)
+- Hjørne 2: Avsenders aksesspunkt-leverandør
+- Hjørne 3: Postkasse-leverandørs aksesspunktleverandør
+- Hjørne 4: Postkasse-leverandør
 
-- Meldingsformidler forsvinn
-- 4-hjørnes-modell med CEF eDelivery/PEPPOL vert ny transport-infrastruktur.
-    - Avsender (og evt. avsender sin leverandør/databehandler) er hjørne 1.
-    - Digdir gjennomfører ein felles anskaffelse av hjørne-2 tenester
-    - Postkasse-leverandørane blir i hjørne 4, og vil truleg operere sin eigen aksesspunkt i hjørne 3.
+Vi ser altså at den sentraliserte Meldingsformidleren blir erstattet av et distribuert nettverk av aksesspunkt-leverandører.
 
-Det treng etablerast ein ny transport-protokoll mellom hjørne 1 og hjørne 2.  I prinsippet er dette opp til aksesspunktleverandøren å bestemme, men for å sikre rask overgang til ny transportinfrastruktur, vil Digdir føreslå ein protokoll.
+Av sikkerhetsgrunner må derfor:
+- meldingsformatet i DPI endres noe
+
+samt noen av Meldingsformidlers oppgaver flyttes til Postkassene:
+- validere ende-til-ende integritet på sendte meldinger
+- validere at avsender har tillatelse til å sende digital post
+- dersom en melding er sendt av en databehandler, validere at databehandler har lov til å opptre på vegne av avsnder
+- sørge for at kvitteringer blir sendt tilbake til rett system uavhengig av om avsender bruker databehandler eller ikke
 
 
-# Overordna skildring
+Det treng etablerast ein ny transport-protokoll mellom hjørne 1 og hjørne 2.  I tradisjonell 4-hjørnes modell er dette noe som markedsmekanismene selv skal ta fram.   prinsippet er dette opp til aksesspunktleverandøren å bestemme, men for å sikre rask overgang til ny transportinfrastruktur, vil Digdir føreslå ein protokoll.
 
-Dette dokumentet er eit framlegg til hjørne1-til-hjørne2-protokoll basert på eit proprietært REST-api sikret med Maskinporten.
 
-Framlegget nyttar standardmekanismar i Maskinporten, sjå:  https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html
+# Revidert meldingsformat i DPI
 
-Avsender sitt fagsystem (subsidiært Avsender sitt integrasjonspunkt i eFormidling) i Hjørne 1 er ein oauth2-klient registeret i Maskinporten
+For å tilpasse meldingsformatet noe til REST, men samtidig unngå for store endringer i eksisterende format, foreslår vi at meldingsformatat for DPI endres noe.  Nytt format består av to deler:
 
-Aksesspunkt-leverandør i Hjørne 2 tilbyr enkle REST-endepunkt mot Avsender for å sende post og hente kvitteringar.  
+1. *Forretningsmelding* blir forenklet til en signert JSON-struktur
+2. *Dokumentpakke*, dvs ASiC-pakken beholdes uendret
 
-# 1: Oppsett
+
+
+# Grensesnittsdefinisjon REST-api
+
+Aksesspunkt-leverandør i Hjørne 2 skal tilby et enkelt REST-endepunkt som Avsender bruker å sende post og hente kvitteringar.
+
+REST-grensesnittet skal sikres med Bearer tokens fra Maskinporten, se:  https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html
+
+Følgenede endepunkt skal tilbys:
+
+- POST /send/digitalpostmelding/{meldingsid}
+- POST /send/fysiskpostmelding/{meldingsid}
+- GET /kvittering/{ConversationId}
+
+TODO:  treng vi skille på digital og fysisk dersom vi heller mapper dette som to ulike processiD i PEPPOL ?
+
+Grensesnitt er dokumentert i OpenAPI-format her:
+
+
+
+
+Autorisert avsender-informasjon kjem frå Maskinporten-tokenet direkte, og ikkje lenger frå signerte ebMS-meldingar.
+
+
+TODO: trengs serializering  av JSON/XML ?
+TODO: kva med PUT og DELETE på tidlegare innsendt melding
+TODO: kva med store filer /mange vedlegg?
+TODO: kva med POST /flytt/digitalpost/
+
+
+
+
+
+# 1: System-oppsett
+
+Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og ikke PK-leverandørene.
+
+Det opprettes `procesid` i PEPPOL  (TOOD:  hvor ?BCP/BCL ?) for de dokumenttyper som trengs støttes.
+- digitalpost
+- fysiskpost
+- dpi-kvittering
+
+
+TODO: trengs det opprettes noe mer ?
+
+
+# 2: Oppsett av PK-leverandør
+
+PK-leverandørene registreres som mottakere av aktuelle processid i TODO??
+
+
+
+
+
+# 3: Oppsett av ny Avsender
 
 Digdir gjev Avsender tilgang i Maskinporten til oauth2-scopet `dpi:send`  når bruksvilkår for Digital Postkasse er inngått.
 
@@ -31,25 +95,11 @@ Alt 2: Avsender som nyttar systemleverandør/databehandlar, må istaden logge in
 
 Avsender (evt. systemleverandør) inngår so ein avtale med ein aksesspunkt-leverandør.  Fagsystemet blir konfigureret og integerert mot aksesspunktleverandør.
 
-# Grensesnittsdefinisjon REST-api
+TODO: noko om oppsett av Integrasjonspunktet?
 
-Aksesspunktleverandør skal tilby følgjande endepunkt:
-
-- POST /send/digitalpostmelding/{meldingsid}
-- POST /send/fysiskpostmelding/{meldingsid}
-- GET /kvittering/{id}
-
-Payload i sende-operasjoner er ein multipart med to delar
-1. Forretningsmelding, TODO:  forenkla til JSON istadenfor XML.
-2. Dokumentpakke (ingen endringer i ASiC-pakke)
-
-Autorisert avsender-informasjon kjem frå Maskinporten-tokenet direkte, og ikkje lenger frå signerte ebMS-meldingar.
+TODO: Avsender (eller Databehandler???) blir satt opp i ELMA?   som mottaker av DPI-kvitteringsmeldinger ?
 
 
-TODO: trengs serializering  av JSON/XML ?
-TODO: kva med PUT og DELETE på tidlegare innsendt melding
-TODO: kva med store filer /mange vedlegg?
-TODO: kva med POST /flytt/digitalpost/
 
 
 ## Eksempel på å sende melding
@@ -85,11 +135,12 @@ Avsender konstruerer en **forretningsmelding**
 * Avsender må sjekke KRR for å finne hvilken postkasse avsender benytter, og sette `postkasseorg` lik postkassens orgno.
 * Avsneder må sette `processID` til korrekt verdi, alt etter om det er fysisk post (TODO: verdi) eller digital post (TODO: verdi)
 * Avsender regner ut en digest av dokumentpakke, og inkluderer som `dokumentpakkefingeravtrykk`
+* `meldingsid` og `ConversationId` må ha tilstrekkeleg entropi til at den vil vere unik over alle meldinger frå alle avsendere over tid.
+
 
 Avsender signerer forretningsmelding slik at den blir en JWS.
 
 
-`meldingsid` og `ConversationId` må ha tilstrekkeleg entropi til at den vil vere unik over alle meldinger frå alle avsendere over tid.
 
 **2:   Avsender sender post-melding**
 
@@ -107,32 +158,61 @@ Authorization: Bearer <maskinporten_token m/ dpi:send scope>
 }
 .
 {
-    "ConversationId": "37efbd4c-413d-4e2c-bbc5-257ef4a65a45",
-    "maskinporten_token": eyJA....
-    "dokumentpakkefingeravtrykk": {
-        "DigestMethod": "http://www.w3.org/2001/04/xmlenc#sha256",
-        "DigestValue": "xxxxxxx"
-    }
-
-    // forretningsmelding under her:
-    "digital": {
-        "orgnummer_til_postkasse": 999888777,
-        "processid": // C1 slå
-        "sikkerhetsnivaa": "",
-        "hoveddokument": "",
-        "avsenderId": "", // valgfri
-        "tittel": "",
-        "spraak": "NO",
-        "digitalPostInfo": {
-            "virkningsdato": "",
-            "aapningskvittering": "false"
+    "transportinfo": {
+        "sender": {
+            "Identifier": {
+                "Authority": "iso6523-actorid-upis",
+                "ID": "0192:999888777"
+            }
         },
-        "varsler": { // valgfri
-            "epostTekst": "Varseltekst",
-            "smsTekst": "Varseltekst"
+        "receiver": {
+            "Identifier": {
+                "Authority": "iso6523-actorid-upis",
+                "ID": "0192:999111222"
+            }
         },
-        "metadataFiler": { // valgfri
-            "test.pdf": "test-metadata.xml"
+        "processid": "digitalpost",
+        "ConversationId": "37efbd4c-413d-4e2c-bbc5-257ef4a65a45"
+    },
+    "digitalpostmelding": {
+        "avsender": {
+            "Identifier": {
+                "Authority": "iso6523-actorid-upis",
+                "ID": "0192:999888999"
+            }
+        },
+        "mottaker": {
+            "Identifier": {
+                "Authority": "norsk_personidentifikator",
+                "ID": "17050411111"
+            }
+        },
+        "dokumentpakkefingeravtrykk": {
+            "DigestMethod": "http://www.w3.org/2001/04/xmlenc#sha256",
+            "DigestValue": "xxxxxxx"
+        },
+        "maskinporten_token": "eyJAxxx",
+        "digitalpostinfo": {
+            "sikkerhetsnivaa": 4,
+            "virkningsdato": "2020-12-31",
+            "aapningskvittering": "false",
+            "ikkesensitivtittel": "",
+            "epostvarsel": {
+                "epostTekst": "Varseltekst",
+                "epostAdresse": "dpi@digdir.no",
+                "dagerEtter": [
+                    0,
+                    7
+                ]
+            },
+            "smsvarsel": {
+                "smsTekst": "Varseltekst",
+                "mobilnummer": "004799999999",
+                "dagerEtter": [
+                    0,
+                    7
+                ]
+            }
         }
     }
 }
@@ -149,28 +229,36 @@ Content-Transfer-Encoding: chunked
 
 ```
 
-TODO:  trengs payload signerast?
-TODO: finst det betre handtering av store dok og/eller mange vedlegg ?
+
+TODO: finst det betre handtering av store dok og/eller mange vedlegg ?  Gjenbruk Espen sine prosseser som integrasjonspunktet allereie har implementert.
 
 
 **3: Aksesspunkt-leverandør mottek melding**
 
 Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).  
 - Utgått token medfører 401-respons
-- Gylidg token men ikkje "dpi:send"-scope eller manglande avtale med APL -> 403 repons
+- Gyldig token men som mangler "dpi:send"-scope eller avsender med manglande avtale med APL -> 403 repons
 
-Aksesspunktleverandør må validere at `consumer`-claimet i token stemmer med DigitalPostMelding/Avsender i forretningsmelding.
+Aksesspunktleverandør må videre validere at:
+* `consumer`-claimet i token stemmer med Avsender i forretningsmelding.
+* `maskinporten_token` i forretningsmelding er samme som ble brukt som Bearer token på API-kallet
+* `meldingsid` ikkje er forsøkt brukt tidlegare.
+
+
+
 
 Aksesspunkt-leverandørar *bør* bruke [audience-begrensa](https://docs.digdir.no/maskinporten_func_audience_restricted_tokens.html) token, slik at ikkje avsender sitt fagsystem ved uhell eller forsett sender post til ein annan aksesspunkt-leverandør enn dei har avtale med.
 
-Aksesspunktleverandør må validere at meldingsid ikkje er forsøkt brukt tidlegare.
+
 
 
 **4: Aksesspunkt-leverandør sender meldinga vidare**
 
-APL ser på forretningsmelding og lager en PEPPOL-SBDH.
-
-APL finner `Receiever`
+APL ser på forretningsmelding og lager en PEPPOL-SBDH basert på denne:
+* SBDH `Receiever` settes lik `postkasseorg`
+* SBDH `processid` settes lik `processid`
+* SBDH `Sender` settes lik
+  *
 
 TODO:  må APL "pakke om" meldinga før den sendes vidare i PEPPOL ?, td:
 - Aksesspunktleverandør kopierer Avsenders orgno frå `consumer`-claim i token, inn i forretningsmeldinga som `avsender`
