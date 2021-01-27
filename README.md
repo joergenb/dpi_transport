@@ -84,8 +84,10 @@ Avsender konstruerer en **forretningsmelding**
 * token mottatt fra Maskinporten puttes i `maskinporten_token`.
 * Avsender må sjekke KRR for å finne hvilken postkasse avsender benytter, og sette `postkasseorg` lik postkassens orgno.
 * Avsneder må sette `processID` til korrekt verdi, alt etter om det er fysisk post (TODO: verdi) eller digital post (TODO: verdi)
+* Avsender regner ut en digest av dokumentpakke, og inkluderer som `dokumentpakkefingeravtrykk`
 
-TODO: Avsender signerer dokument-pakke.   Må/bør dette vere samme sertiifkat som opp mot maskinporten ?   Og kva viss det er Databehandler som signerer ?  Korleis kan PK-leverandør kontrollere denne signaturen?  
+Avsender signerer forretningsmelding slik at den blir en JWS.
+
 
 `meldingsid` og `ConversationId` må ha tilstrekkeleg entropi til at den vil vere unik over alle meldinger frå alle avsendere over tid.
 

@@ -1,0 +1,223 @@
+openapi: 3.0.2
+info:
+    title: API for aksesspunktleverandører i DPI
+    version: 1.0.0
+    description: A brand new API with no content.  Go nuts!
+paths:
+    /send:
+        servers:
+            -
+                url: 'https://api.aksesspunktleverandør.no/'
+                description: ''
+        post:
+            requestBody:
+                description: 'består av to deler,  digitalpostmelding og dokumentpakke'
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/digitalpostmelding'
+                    text/xml: {}
+                required: true
+            responses:
+                '200':
+                    description: 'Mottatt OK av aksesspunktleverandør, og vil bli sendt videre til postkasse'
+                '400':
+                    description: valideringsfeil - fornuftig beskrivelse bør inkluderes
+                '401':
+                    description: Utløpt token
+                '403':
+                    description: >-
+                        Token mangler "dpi:send" scope, eller avsender har ikke gyldig avtale med
+                        aksesspunktleverandør.
+    /hentkvittering: {}
+components:
+    schemas:
+        actor:
+            title: Root Type for actor
+            description: ''
+            required:
+                - Identifier
+            type: object
+            properties:
+                Identifier:
+                    $ref: '#/components/schemas/Identifier'
+                    properties:
+                        Authority:
+                            type: string
+                        ID:
+                            type: string
+            example:
+                Identifier:
+                    Authority: iso6523-actorid-upis
+                    ID: '1092:910075918'
+        Identifier:
+            title: Root Type for Identifier
+            description: ''
+            type: object
+            properties:
+                Authority:
+                    description: |
+                        peker til autorativt kodeverk for identifikatoren
+                    type: string
+                ID:
+                    description: |
+                        identifikator-verdi,  formattert ihht. Authority sine syntaksregler
+                    type: string
+            example:
+                Authority: iso6523-actorid-upis
+                ID: '0192:991825827'
+        dokumentpakkefingeravtrykk:
+            title: Root Type for dokumentpakkefingeravtrykk
+            description: Fingeravtrykk av Dokumentpakken (ASIC)
+            type: object
+            properties:
+                DigestMethod:
+                    type: string
+                DigestValue:
+                    type: string
+            example:
+                DigestMethod: 'http://www.w3.org/2001/04/xmlenc#sha256'
+                DigestValue: xxxxxxx
+        digitalpostmelding:
+            title: Root Type for digitalpostmelding
+            description: ''
+            type: object
+            properties:
+                transportinfo:
+                    type: object
+                    properties:
+                        sender:
+                            type: object
+                            properties:
+                                Identifier:
+                                    type: object
+                                    properties:
+                                        Authority:
+                                            type: string
+                                        ID:
+                                            type: string
+                        receiver:
+                            type: object
+                            properties:
+                                Identifier:
+                                    type: object
+                                    properties:
+                                        Authority:
+                                            type: string
+                                        ID:
+                                            type: string
+                        processid:
+                            type: string
+                        ConversationId:
+                            type: string
+                digitalpostmelding:
+                    type: object
+                    properties:
+                        avsender:
+                            type: object
+                            properties:
+                                Identifier:
+                                    type: object
+                                    properties:
+                                        Authority:
+                                            type: string
+                                        ID:
+                                            type: string
+                        mottaker:
+                            type: object
+                            properties:
+                                Identifier:
+                                    type: object
+                                    properties:
+                                        Authority:
+                                            type: string
+                                        ID:
+                                            type: string
+                        dokumentpakkefingeravtrykk:
+                            type: object
+                            properties:
+                                DigestMethod:
+                                    type: string
+                                DigestValue:
+                                    type: string
+                        maskinporten_token:
+                            type: string
+                        digitalpostinfo:
+                            type: object
+                            properties:
+                                sikkerhetsnivaa:
+                                    format: int32
+                                    type: integer
+                                virkningsdato:
+                                    format: date
+                                    type: string
+                                aapningskvittering:
+                                    type: string
+                                ikkesensitivtittel:
+                                    type: string
+                                epostvarsel:
+                                    type: object
+                                    properties:
+                                        epostTekst:
+                                            type: string
+                                        epostAdresse:
+                                            type: string
+                                        dagerEtter:
+                                            type: array
+                                            items:
+                                                format: int32
+                                                type: integer
+                                smsvarsel:
+                                    type: object
+                                    properties:
+                                        smsTekst:
+                                            type: string
+                                        mobilnummer:
+                                            type: string
+                                        dagerEtter:
+                                            type: array
+                                            items:
+                                                format: int32
+                                                type: integer
+            example:
+                transportinfo:
+                    sender:
+                        Identifier:
+                            Authority: iso6523-actorid-upis
+                            ID: '0192:999888777'
+                    receiver:
+                        Identifier:
+                            Authority: iso6523-actorid-upis
+                            ID: '0192:999111222'
+                    processid: digitalpost
+                    ConversationId: 37efbd4c-413d-4e2c-bbc5-257ef4a65a45
+                digitalpostmelding:
+                    avsender:
+                        Identifier:
+                            Authority: iso6523-actorid-upis
+                            ID: '0192:999888999'
+                    mottaker:
+                        Identifier:
+                            Authority: norsk_personidentifikator
+                            ID: '17050411111'
+                    dokumentpakkefingeravtrykk:
+                        DigestMethod: 'http://www.w3.org/2001/04/xmlenc#sha256'
+                        DigestValue: xxxxxxx
+                    maskinporten_token: eyJAxxx
+                    digitalpostinfo:
+                        sikkerhetsnivaa: 4
+                        virkningsdato: '2020-12-31'
+                        aapningskvittering: 'false'
+                        ikkesensitivtittel: ''
+                        epostvarsel:
+                            epostTekst: Varseltekst
+                            epostAdresse: dpi@digdir.no
+                            dagerEtter:
+                                - 0
+                                - 7
+                        smsvarsel:
+                            smsTekst: Varseltekst
+                            mobilnummer: 004799999999
+                            dagerEtter:
+                                - 0
+                                - 7
