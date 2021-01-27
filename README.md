@@ -95,16 +95,23 @@ TODO: Avsender signerer dokument-pakke.   Må/bør dette vere samme sertiifkat s
 ```
 POST /dpi/send/digitalpost/{meldingsid}
 Host: api.aksesspunktleveradandør.no
-Content-Type: multipart/form-data; boundary=DPIseparator
+Content-Type: application/jose
 Authorization: Bearer <maskinporten_token m/ dpi:send scope>
 
---DPI-separator
-Content-Disposition: form-data; name="forretningsmelding"
-Content-Type: application/json
-
+{
+    "typ":"JWT",
+    "alg":"HS256"
+}
+.
 {
     "ConversationId": "37efbd4c-413d-4e2c-bbc5-257ef4a65a45",
     "maskinporten_token": eyJA....
+    "dokumentpakkefingeravtrykk": {
+        "DigestMethod": "http://www.w3.org/2001/04/xmlenc#sha256",
+        "DigestValue": "xxxxxxx"
+    }
+
+    // forretningsmelding under her:
     "digital": {
         "sikkerhetsnivaa": "",
         "hoveddokument": "",
@@ -123,10 +130,10 @@ Content-Type: application/json
             "test.pdf": "test-metadata.xml"
         }
     }
-    "dokumentpakkefingeravtrykk": {
-        "DigestMethod": "http://www.w3.org/2001/04/xmlenc#sha256",
-        "DigestValue": "xxxxxxx"
-    }
+}
+.
+{
+  < signatur-verdi>
 }
 
 --DPI-separator
