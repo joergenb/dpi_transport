@@ -37,30 +37,45 @@ Forslaget er derfor:
 1. [*Dokumentpakken*, dvs ASiC-pakken](https://docs.digdir.no/dokumentpakke_index.html) beholdes uendret
 2. [*Forretningsmeldingene*](https://docs.digdir.no/sdp_index.html) beholdes også stort sett uendret.
  * TBD om formatet skal endres fra XML til JSON for å bli mer tilpasset vanlig REST-bruk
+ * Kan vi legge til nye felter i XML-baserte forretningsmeldinger uten at XSD-er gjør at validering brekker mange steder?
 3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) fjernes
  * Informasjonen som finnes her idag, flyttes delvis inn forretningsmelding, eller som del av REST-URLene.
- 
+
 
 # Grensesnittsdefinisjon REST-api
 
 Aksesspunkt-leverandør i Hjørne 2 skal tilby et enkelt REST-endepunkt som Avsender bruker å sende post og hente kvitteringar.
 
-REST-grensesnittet skal sikres med Bearer tokens fra Maskinporten, se: https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html.  Informasjon om godkjente avsendere og  En aksesspunktleverandør kan stole på at slike tokens betyr at Avsender har lov til å sende digital post.  okens utsted av Maskinporten Kun godkjente Avsendere, og deres eventuelle Databehandlere 
+REST-grensesnittet skal sikres med Bearer tokens fra Maskinporten, se: https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html.  Informasjon om godkjente avsendere og deres eventuell databehandlere blir kodet inn i dette tokenet.
 
-Følgende endepunkt skal tilbys:
+Aksesspunkt-leverandør skal tilby 2 endepunkt:
 
-- POST /send/{meldingstype}/{postkasseleverandørorgno}/{conversationid}/{meldingsid}
-- GET /kvittering/{conversationid}
+### Sende post
+
+URL på formen:
+```
+POST /send/{meldingstype}/{postkasseleverandørorgno}/{conversationid}/{meldingsid}
+```
+
+### Hente kvitteringer:
+
+URL på formen
+```
+GET /kvittering/{conversationid}
+```
 
 TODO: vurdere om c2 skal PUSHE kvitteringer tilbake til avsender / systemleverandør, istedenfor pull.
+TODO: openapi-definisjon
+
 TODO: trengs serializering / canonicalization  av JSON/XML ?
-TODO: kva med PUT og DELETE på tidlegare innsendt melding
 TODO: kva med store filer /mange vedlegg?
 TODO: kva med POST /flytt/digitalpost/
 
 
 
-# 1: System-oppsett
+# Forutsetninger:
+
+### System-oppsett
 
 Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og faktureres ikke.
 
@@ -73,12 +88,12 @@ Det opprettes `processid` i ELMA for de dokumenttyper som trengs støttes.
 TODO: trengs det opprettes noe mer ?
 
 
-# 2: Oppsett av PK-leverandør
+### Oppsett av PK-leverandør
 
 PK-leverandørene registreres som mottakere av aktuelle processid i ELMA.
 
 
-# 3: Oppsett av ny Avsender
+### Oppsett av ny Avsender
 
 Digdir gjev Avsender tilgang i Maskinporten til oauth2-scopet `dpi:send`  når bruksvilkår for Digital Postkasse er inngått.
 
@@ -94,14 +109,13 @@ TODO: Avsender (eller Databehandler???) blir satt opp i ELMA?   som mottaker av 
 
 
 
+# Meldingsflyt sende post
 
-## Eksempel på å sende melding
+## 1:  Avsender henter token fra maskinporten
 
-**1:  Avsender henter token fra maskinporten**
+Fagsystem lager en JWT grant som etterspør `dpi:send`-scopet, signerer denne ( se https://docs.digdir.no/maskinporten_protocol_jwtgrant.html, sender dette til Maskinporten og får  et access_token i retur.
 
-Fagsystem signerer eit JWT grant ihht https://docs.digdir.no/maskinporten_protocol_jwtgrant.html, sender dette til Maskinporten og får  eit access_token i retur.
-
-Ved utstedelse av token vil Maskinpoten kontrollere:
+Ved utstedelse av token vil Maskinporten kontrollere:
 - at Avsender har lov til å bruka DPI.
 - Viss Avsender har databehandler, sjekkar Maskinporten mot Altinn Autorisasjon at aktuell autentisert Databehandlar har fått lov til å opptre på vegne av Avsender for sending av DPI.
 
@@ -112,33 +126,38 @@ Døme på access_token
   "scope": "dpi:send",
   "aud": "https://api.aksesspunktleverandør.no/"
   "consumer": {
-    "Identifier": {
       "Authority": "iso6523-actorid-upis",
-      "ID": "0192:991825827"
-    }
+      "ID": "0192:991825827"      // Alltid Avsenders orgno
+  }
+  "supplier": {
+      "Authority": "iso6523-actorid-upis",
+      "ID": "0192:991825827"      // Eventuell Databehandler.
+  }
   "iat": <timestamp>
   "exp": <iat-verdi + 30 sec>
   }
 ```
 
-Dersom avsender nyttar ein Databehandler, so vil tokenet ogso ha eit `supplier`-claim som inneheld systemleverandørens organisasjonsnummer.
+Dersom avsender er sin egen Databehandler så mangler tokenet `supplier`-claimet.
+
+Avsender slår opp i KRR og finner hvilken PK-leverandør som innbygger benytter - og vet derigjennom om det skal sendes digital eller fysisk post
+
+Avsender kan nå konstruere korrekt **forretningsmelding** (DigitalPostMelding) etter [dagens regler](https://docs.digdir.no/sdp_digitalpostmeldinger.html), men med følgende tillegg:
+
+* token mottatt fra Maskinporten inkluderes i et felt `<maskinporten_token>`.
+* en identifikator for meldingen inkluderes i et felt `<conversation_id>`
+* Databehandler må signere forretningsmeldingen med samme sertifikat som benyttes til å signere Dokumentpakke.
+  * TODO: er denne signert idag, hvilke regler for XML-signering gjelder?
 
 
-Avsender konstruerer en **forretningsmelding**
-* token mottatt fra Maskinporten puttes i `maskinporten_token`.
-* Avsender må sjekke KRR for å finne hvilken postkasse avsender benytter, og sette `postkasseorg` lik postkassens orgno.
-* Avsender må sette `processID` til korrekt verdi, alt etter om det er fysisk post (TODO: verdi) eller digital post (TODO: verdi)
-* Avsender regner ut en digest av dokumentpakke, og inkluderer som `dokumentpakkefingeravtrykk`
-* `meldingsid` og `ConversationId` må ha tilstrekkeleg entropi til at den vil vere unik over alle meldinger frå alle avsendere over tid.
+TODO: er det lov for Avsender å sende flere meldinger på samme conversation-id ?
+
+TODO: hvordan finnes print-leverandør?  kan det være flere? dersom ja,  er det avsender eller aksesspunktleverandør som bestemmer hvilken som skal brukes?
 
 
-Avsender signerer forretningsmelding slik at den blir en JWS.
+## 2:   Avsender sender post-melding
 
-
-
-**2:   Avsender sender post-melding**
-
-
+Avsender kan konstrukere korrekt URL mot aksespunktvet nå også hvilken forretningsmelding som skal sendes (fysisk eller digital).
 
 ```
 POST /dpi/send/digitalpost/{postkasseleverandør-orgno}/{conversationid}
@@ -160,7 +179,7 @@ Content-Transfer-Encoding: chunked
 TODO: finst det betre handtering av store dok og/eller mange vedlegg ?  Gjenbruk Espen sine prosseser som integrasjonspunktet allereie har implementert.
 
 
-**3: Aksesspunkt-leverandør mottek melding**
+### 3: Aksesspunkt-leverandør mottek melding
 
 Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).  
 - Utgått token medfører 401-respons
@@ -168,36 +187,35 @@ Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinpor
 
 Aksesspunktleverandør må videre validere at:
 * `consumer`-claimet i token stemmer med Avsender i forretningsmelding.
-* `maskinporten_token` i forretningsmelding er samme som ble brukt som Bearer token på API-kallet
+* [`aud`-claimet i token](ttps://docs.digdir.no/maskinporten_func_audience_restricted_tokens.html) stemmer med eget API-adresse
+* `maskinporten_token` i forretningsmelding er identisk med det som ble brukt som Bearer token det aktuelle API-kallet
 * `meldingsid` ikkje er forsøkt brukt tidlegare.
 
 
+TODO: skal APL kva med PUT og DELETE på tidlegare innsendt melding
 
 
-Aksesspunkt-leverandørar *bør* bruke [audience-begrensa](https://docs.digdir.no/maskinporten_func_audience_restricted_tokens.html) token, slik at ikkje avsender sitt fagsystem ved uhell eller forsett sender post til ein annan aksesspunkt-leverandør enn dei har avtale med.
+Aksesspunktleverandør lagrer converstation-id og tilhørende avsender/databehandler, slik at kvitteringsmeldinger og feilmeldinger relatert til meldingen kan håndteres.
 
 
+### 4: Aksesspunkt-leverandør i hjørne 2 sender meldinga vidare til hjørne 3
 
+APL mapper `meldingstype` i URL til riktig processid.  
+APL slår opp i ELMA på processid og PK-leverndørs orgno.
 
-**4: Aksesspunkt-leverandør i hjørne 2 sender meldinga vidare til hjørne 3**
+APL kan nå konstrurere en PEPPOL-SBDH:
 
-APL konstrurerer en PEPPOL-SBDH basert på :
-- innkommende URL
-- innholdet i <DigitalPostMelding>
-- oppslag i ELMA for processid og postkasseleverandør-orgno.
-  
 TODO: hvordan adresseres C3?
 TODO: hvordan får C3 vite at denne meldingen skal til C4 ?
-TODO: må vi her ta vite hvem som skal ha tilhørende kvitteringer (avsender selv, eller databehandlers system)?
 
 Dvs:  
-* SBDH `Receiever` settes lik ? 
+* SBDH `Receiever` settes lik ?
 * SBDH `processid` settes lik `processid`
-* SBDH `Sender` settes lik  ? 
+* SBDH `Sender` settes lik  (Avsender / Databehandler)?
 
+TODO:  Er det behov for å kunne spore at melding er mistet mellom hjørne 2 og hjørne 3.  Hva vet Digdir i såfall som kan hjelpe slik feilsøking?
 
-
-**5: Hjørne 3 mottek meldinga, og sender vidare til hjørne 4**
+### 5: Hjørne 3 mottek meldinga, og sender vidare til hjørne 4
 
 TODO: C3 trenger å vite om meldingen skal til Digipost eller eBoks
 
@@ -214,12 +232,36 @@ d: validere at Avsender i forretningsmeldinger stemmer med `consumer` i `maskinp
 e: validere at virksomhetssertifikatet som er brukt til å signere både Dokumentpakke og DigitalPostMelding stemmer med autorisert avsender (dvs maskinporten-token)
   * lik `supplier`s orgno, dersom dette claimet finnes i maskinporten_token
   * lik `consumer`s orgno ellers
-  
+
 d: på-en-eller-annen-måte validere at privat-nøkkelen som er brukt til å signere i pkt a-c tilhører avsender.
 
 # Kvitteringer
 
-PK-leverandør må kunne asynkront sende kvittering tilbake i C3 -> C2 -> C1.  (dvs C3 må tilby et API eller mekanisme der PK-leverandør kan overføre kvitteringer, og dette må ta høyde for at slik kvitteringlevering skal kunne være asynkront av levereing av digitalpostmelding C3->C4.)
+PK-leverandør må kunne asynkront sende kvittering tilbake i C3 -> C2 -> C1.  (dvs C3 må tilby et API eller mekanisme der PK-leverandør kan overføre kvitteringer, og dette må ta høyde for at slik kvitteringlevering skal kunne skje asynkront ifht levering av digitalpostmelding C3->C4.)
+
+Feltet `converstation_id` kobler sammen en kvittering med tilhørende DigitalPostMelding.  
+
+PK-leverandør lager en **forretningsmelding** (<LeveringKvittering>, <VarslingFeilet>, <Mottak>, <ReturPost>) etter dagens regler, med følgende tillegg:
+* PK-leverandør legger til `conversation_id` i LeveringsKvittering
+* PK-leverandør legger til Avsenders orgno i feltet `Avsender`
+* PK-leverandør legger til Databehandlers orgno i feltet `Databehandler`
+
+
+PK-leverandør ber så om at C3 sender kvitteringa til Avsender.
+
+Eksempel
+```
+POST /send/kvittering/{avsender_orgno}/{conversationid}/{meldingsid}
+```
+
+C3 slår opp i ELMA og finner hvem som er C2 for Avsender.
+C3 lager en PEPPOL-melding til C2.
+C2 mottar kvitteringa, og legger den i kø.  Venter på at Avsenders system poll'er på kvitteringer med riktig conversation-id.
+
+
+TODO: kva viss det er fleire fagsystemer hjå Avsender som sender Digtal Post - korleis identifisere og adressere det rette?
+
+C3 slår opp i ELMA og finn
 
 
 # 2-vegs svar
