@@ -146,6 +146,7 @@ Avsender signerer forretningsmelding slik at den blir en JWS.
 
 
 
+
 ```
 POST /dpi/send/digitalpost/{meldingsid}
 Host: api.aksesspunktleveradandør.no
