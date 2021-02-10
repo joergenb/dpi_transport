@@ -3,7 +3,7 @@ Dette dokumentet er eit framlegg til nytt, proprietært REST-api sikret med Mask
 
 # Bakgrunn
 
-Den proprietære transportinfrastrukturen for Digital Postkasse til innbyggere skal erstattes med en standard-infrastruktur for meldingsutvekling i det offentlege, dvs 4-hjørnes-modell med CEF eDelivery/PEPPOL:
+Den proprietære transportinfrastrukturen for Digital Postkasse til innbyggere skal erstattes med en standard-infrastruktur for meldingsutvekling i det offentlege, dvs 4-hjørnes-modell med CEF eDelivery/PEPPOL. Følgende aktører inngår:
 - Hjørne 1: Avsender (og evt. avsender sin leverandør/databehandler)
 - Hjørne 2: Avsenders aksesspunkt-leverandør
 - Hjørne 3: Postkasse-leverandørs aksesspunktleverandør
@@ -21,25 +21,31 @@ samt noen av Meldingsformidlers oppgaver flyttes til Postkassene:
 - sørge for at kvitteringer blir sendt tilbake til rett system uavhengig av om avsender bruker databehandler eller ikke
 
 
-Det treng etablerast ein ny transport-protokoll mellom hjørne 1 og hjørne 2.  I tradisjonell 4-hjørnes modell er dette noe som markedsmekanismene selv skal ta fram.   prinsippet er dette opp til aksesspunktleverandøren å bestemme, men for å sikre rask overgang til ny transportinfrastruktur, vil Digdir føreslå ein protokoll.
+Det må etableres en ny transport-protokoll mellom hjørne 1 og hjørne 2.  I tradisjonell PEPPOL-tenking er dette noe som markedsaktørene selv skal ta fram - dvs i prinsippet er dette opp til aksesspunktleverandørene selv å bestemme. Siden Digdir ønsker å gjøre en anskaffelse av aksesspunktleverandørtjenester for formidling av digital post, som de fleste avsendere kommer til å benytte, er det hensiktismessig at Digdir kravstiller en protokoll som skal brukes av denne leverandøren.  Det hindrer ikke andre aktører å implementere andre, egne protokoller.
 
 
-# Revidert meldingsformat i DPI
 
-For å tilpasse meldingsformatet noe til REST, men samtidig unngå for store endringer i eksisterende format, foreslår vi at meldingsformatat for DPI endres noe.  Nytt format består av to deler:
+# Revidert meldingsformat- og transportformat i DPI
 
-1. *Forretningsmelding* beholdes ihht dagens XML-format, men blir utvidet med 
-  * maskinporten_token
-  * conversationid (eller meldingsid)
-2. *Dokumentpakke*, dvs ASiC-pakken beholdes uendret
+Motivasjon bak forslaget:
 
+* Minst mulig endringer på eksisterende format, da både avsender-systemer og postkasse-leverandører støtter dette.
+* Må ta høyde for at en aksesspunktleverandør i PEPPOL kan bli kompromittert av en angriper som vil forsøke å injisere falske meldinger
+* Fjerne ebMS 3.0 som transportformat mellom Databehandler og Meldingsformidler, da erfaring viser at denne er relativt komplisert å ta i bruk, og vil være lite attraktiv for potensielle aksesspunktleverandører å måtte implementere,  og heller innføre en moderne og sikker lettvektsprotokoll som REST.
 
+Forslaget er derfor:
+1. [*Dokumentpakken*, dvs ASiC-pakken](https://docs.digdir.no/dokumentpakke_index.html) beholdes uendret
+2. [*Forretningsmeldingene*](https://docs.digdir.no/sdp_index.html) beholdes også stort sett uendret.
+ * TBD om formatet skal endres fra XML til JSON for å bli mer tilpasset vanlig REST-bruk
+3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) fjernes
+ * Informasjonen som finnes her idag, flyttes delvis inn forretningsmelding, eller som del av REST-URLene.
+ 
 
 # Grensesnittsdefinisjon REST-api
 
 Aksesspunkt-leverandør i Hjørne 2 skal tilby et enkelt REST-endepunkt som Avsender bruker å sende post og hente kvitteringar.
 
-REST-grensesnittet skal sikres med Bearer tokens fra Maskinporten, se:  https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html  Autorisert avsender-informasjon kjem frå Maskinporten-tokenet direkte, og ikkje lenger frå signerte ebMS-meldingar (SBDH)
+REST-grensesnittet skal sikres med Bearer tokens fra Maskinporten, se: https://docs.digdir.no/maskinporten_auth_server-to-server-oauth2.html.  Informasjon om godkjente avsendere og  En aksesspunktleverandør kan stole på at slike tokens betyr at Avsender har lov til å sende digital post.  okens utsted av Maskinporten Kun godkjente Avsendere, og deres eventuelle Databehandlere 
 
 Følgende endepunkt skal tilbys:
 
@@ -47,8 +53,6 @@ Følgende endepunkt skal tilbys:
 - GET /kvittering/{conversationid}
 
 TODO: vurdere om c2 skal PUSHE kvitteringer tilbake til avsender / systemleverandør, istedenfor pull.
-
-
 TODO: trengs serializering / canonicalization  av JSON/XML ?
 TODO: kva med PUT og DELETE på tidlegare innsendt melding
 TODO: kva med store filer /mange vedlegg?
@@ -56,16 +60,14 @@ TODO: kva med POST /flytt/digitalpost/
 
 
 
-
-
 # 1: System-oppsett
 
-Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og ikke PK-leverandørene.
+Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og faktureres ikke.
 
 Det opprettes `processid` i ELMA for de dokumenttyper som trengs støttes.
-- digitalpost
-- fysiskpost
-- dpi-kvittering
+- digitalpost:
+- fysiskpost:
+- dpi-kvittering:
 
 
 TODO: trengs det opprettes noe mer ?
