@@ -217,23 +217,23 @@ TODO:  Er det behov for å kunne spore at melding er mistet mellom hjørne 2 og 
 
 ### 5: Hjørne 3 mottek meldinga, og sender vidare til hjørne 4
 
-TODO: C3 trenger å vite om meldingen skal til Digipost eller eBoks
+TODO: C3 trenger å vite om meldingen skal til Digipost eller eBoks (Er dette Receiver i SBDH?)
 
-C3 og C4 avtaler selv protokoll seg i mellom.  De kan gjerne gjenbruke C1-C2 REST-grensesnittet, men må finne egen sikringsmekanisme (egen oauth2 autorisasjonsserver, eller bare bruke 2-vegs tls).
+C3 og C4 avtaler selv protokoll seg i mellom.  De kan gjerne gjenbruke C1-C2 REST-grensesnittet definert over, men må finne egen sikringsmekanisme (egen oauth2 autorisasjonsserver, eller bare bruke 2-vegs tls).
 
 
-**6: Hjørne 4 mottek meldinga og puttar i postkassen til innnbygger**
+### 6: Hjørne 4 mottek meldinga og puttar i postkassen til innnbygger
 
 Ved mottak av melding, må postkasse-leverandør validere ende-til-ende integritet, dvs:
-a: at forretningsmelding er signert av Avsender(eller Sender) og inneholder en digest av den dokumentpakken som skal være tilhørende foretningsmeldinga
-b: at dokumentpakken er signert av Avsender(eller Sender)
+a: at DigitalPostMelding er signert av Avsender(eller Databehandler) og inneholder en digest for tilhørende dokumentpakke
+b: at dokumentpakken er signert av Avsender(eller Databehandler)
 c: regne ut digest av dokumentpakken og kontrollere at utrekna digest stemmer med påstått verdi i forretningsmeldinga
 d: validere at Avsender i forretningsmeldinger stemmer med `consumer` i `maskinporten_token` i forretningsmeldinga.
 e: validere at virksomhetssertifikatet som er brukt til å signere både Dokumentpakke og DigitalPostMelding stemmer med autorisert avsender (dvs maskinporten-token)
   * lik `supplier`s orgno, dersom dette claimet finnes i maskinporten_token
   * lik `consumer`s orgno ellers
 
-d: på-en-eller-annen-måte validere at privat-nøkkelen som er brukt til å signere i pkt a-c tilhører avsender.
+d: på-en-eller-annen-måte validere at virksomhetssertifikatet som er brukt til å signere i pkt a-b tilhører avsender.
 
 # Kvitteringer
 
@@ -256,12 +256,12 @@ POST /send/kvittering/{avsender_orgno}/{conversationid}/{meldingsid}
 
 C3 slår opp i ELMA og finner hvem som er C2 for Avsender.
 C3 lager en PEPPOL-melding til C2.
-C2 mottar kvitteringa, og legger den i kø.  Venter på at Avsenders system poll'er på kvitteringer med riktig conversation-id.
+C2 mottar kvitteringa, og legger den i kø.  Venter på at Avsenders system poll'er på kvitteringer med riktig conversation-id.  Verifiserer at Avsender som forsøker å hente kvittering, er den samme som sendte digitalpostmeldinga.
 
 
 TODO: kva viss det er fleire fagsystemer hjå Avsender som sender Digtal Post - korleis identifisere og adressere det rette?
 
-C3 slår opp i ELMA og finn
+
 
 
 # 2-vegs svar
