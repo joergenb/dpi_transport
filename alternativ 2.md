@@ -32,14 +32,14 @@ Motivasjon bak forslaget:
 * Minst mulig endringer på eksisterende format, da både avsender-systemer og postkasse-leverandører støtter dette.
 * Må ta høyde for at en aksesspunktleverandør i PEPPOL kan bli kompromittert av en angriper som vil forsøke å injisere falske meldinger
 * Fjerne ebMS 3.0 som transportformat mellom Databehandler og Meldingsformidler, da erfaring viser at denne er relativt komplisert å ta i bruk, og vil være lite attraktiv for potensielle aksesspunktleverandører å måtte implementere,  og heller innføre en moderne og sikker lettvektsprotokoll som REST.
+* Gjenbrukbart format også for andre meldinger i eMeldingsinfrastrukturen
+* Utviklervenlig format med høyt rammeverk- og produktstøtte, for å gjøre det så lett som mulig å sende meldinger fra hjørne 1.
 
 Forslaget er derfor:
 1. [*Dokumentpakken*, dvs ASiC-pakken](https://docs.digdir.no/dokumentpakke_index.html) beholdes uendret
 2. [*Forretningsmeldingene*](https://docs.digdir.no/sdp_index.html) beholdes også stort sett uendret.
- * TBD om formatet skal endres fra XML til JSON for å bli mer tilpasset vanlig REST-bruk
- * Kan vi legge til nye felter i XML-baserte forretningsmeldinger uten at XSD-er gjør at validering brekker mange steder?
-3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) fjernes
- * Informasjonen som finnes her idag, flyttes delvis inn forretningsmelding, eller som del av REST-URLene.
+ * Formatet skal endres fra XML til JWT for å bli mer tilpasset vanlig REST-bruk
+3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) flyttes inn i forretningsmeldinga
 
 
 # Grensesnittsdefinisjon REST-api
@@ -54,7 +54,7 @@ Aksesspunkt-leverandør skal tilby 2 endepunkt:
 
 URL på formen:
 ```
-POST /send/{meldingstype}/{postkasseleverandørorgno}/{conversationid}/{meldingsid}
+POST /sendmelding/{conversationid}/{meldingsid}
 ```
 
 ### Hente kvitteringer:
