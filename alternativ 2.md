@@ -52,37 +52,45 @@ Aksesspunkt-leverandør skal tilby 2 endepunkt:
 
 ### Sende post
 
-URL på formen:
+Post sendes i to steg - i første steg sendes forretningsmeldinga:
 ```
-POST /sendmelding/{conversationid}/{meldingsid}
+POST /sendmelding/{meldingsid}
+
+forretningsmelding i JWT-format
 ```
+
+og i andre steg sendes / strømmes selve dokumentet.
+```
+PUT /sendmelding/{meldingsid}
+
+ASCI-e
+```
+Oppdeling i to steg skaper fleksibilitet og sikrer støtte for store dokumenter, evt. flere dokumenter på samme melding.
 
 ### Hente kvitteringer:
 
 URL på formen
 ```
 GET /kvittering/{conversationid}
+GET /kvittering/avsenderidentifikator/{conversationid}
 ```
 
-TODO: vurdere om c2 skal PUSHE kvitteringer tilbake til avsender / systemleverandør, istedenfor pull.
 TODO: openapi-definisjon
-
-TODO: trengs serializering / canonicalization  av JSON/XML ?
-TODO: kva med store filer /mange vedlegg?
-TODO: kva med POST /flytt/digitalpost/
-
 
 
 # Forutsetninger:
 
 ### System-oppsett
 
-Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og faktureres ikke.
+Digdir oppretter maskinporten-scopet `dpi:send`. Tilgang til dette scopet betyr at Avsender har inngår bruksvilkår for Digital Postkasse til Innbygger.  Digdir settes som eier av Maskinporten-scopet, som betyr at det er Digdir som administrerer hvem som får tilgang. Faktura for konsumentene (= alle avsendere) går til Digdir selv og faktureres ikke.
+
+Ved bruk av Altinn Autorisasjon til delegering, må det opprettes et "delegationScheme" i Altinn som muliggjør at Behandlingsansvarlig kan delegere til Databehandler.   Digdir blir eier av delegationSchemet, og Digdir vil motta faktura for bruk av Altinn.
 
 Det opprettes `processid` i ELMA for de dokumenttyper som trengs støttes.
-- digitalpost:
-- fysiskpost:
-- dpi-kvittering:
+- digitalpost
+- fysiskpost
+- dpi-kvittering
+- flytt-digitalpost
 
 
 TODO: trengs det opprettes noe mer ?
@@ -105,8 +113,9 @@ Avsender (evt. systemleverandør) inngår so ein avtale med ein aksesspunkt-leve
 
 TODO: noko om oppsett av Integrasjonspunktet?
 
-TODO: Avsender (eller Databehandler???) blir satt opp i ELMA?   som mottaker av DPI-kvitteringsmeldinger ?
-
+Avsender må bli satt opp i ELMA som mottaker av DPI-kvitteringsmeldinger.
+TODO: Kva med bruk av Databehandler - er det avsender eller databehdnler som skal registreres i ELMA?
+TODO:  kva viss avsender har fleire fagsystemer som sender digital post (/Avsender/avsenderidentifiktor/ ) - må alle Oslo Kommune sine systemer være kobla til samme aksesspunkt ?
 
 
 # Meldingsflyt sende post
