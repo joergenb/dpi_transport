@@ -56,14 +56,14 @@ Post sendes i to steg - i første steg sendes forretningsmeldinga:
 ```
 POST /sendmelding/{meldingsid}
 
-forretningsmelding i JWT-format
+<forretningsmelding i JWT-format>
 ```
 
 og i andre steg sendes / strømmes selve dokumentet.
 ```
 PUT /sendmelding/{meldingsid}
 
-ASCI-e
+<ASCI-e>
 ```
 Oppdeling i to steg skaper fleksibilitet og sikrer støtte for store dokumenter, evt. flere dokumenter på samme melding.
 
