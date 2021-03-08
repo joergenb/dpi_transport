@@ -1,0 +1,308 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "http://example.com/example.json",
+	"type": "object",
+	"title": "The root schema",
+	"description": "The root schema comprises the entire JSON document.",
+	"default": {
+	},
+	"required": [
+		"digitalpost"
+	],
+	"properties": {
+		"digitalpost": {
+			"$id": "#/properties/digitalpost",
+			"type": "object",
+			"title": "The digitalpost schema",
+			"description": "An explanation about the purpose of this instance.",
+			"default": {
+			},
+			"required": [
+				"avsender",
+				"mottaker",
+				"digitalpostinfo",
+				"dokumentpakkefingeravtrykk"
+			],
+			"properties": {
+				"avsender": {
+					"$id": "#/properties/digitalpost/properties/avsender",
+					"type": "object",
+					"title": "The avsender schema",
+					"description": "An explanation about the purpose of this instance.",
+					"default": {
+					},
+					"required": [
+						"Identifier"
+					],
+					"properties": {
+						"Identifier": {
+							"$id": "#/properties/digitalpost/properties/avsender/properties/Identifier",
+							"type": "object",
+							"title": "The Identifier schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": {
+							},
+							"required": [
+								"Authority",
+								"ID"
+							],
+							"properties": {
+								"Authority": {
+									"$id": "#/properties/digitalpost/properties/avsender/properties/Identifier/properties/Authority",
+									"type": "string",
+									"title": "The Authority schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": ""
+								},
+								"ID": {
+									"$id": "#/properties/digitalpost/properties/avsender/properties/Identifier/properties/ID",
+									"type": "string",
+									"title": "The ID schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": ""
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"additionalProperties": false
+				},
+				"mottaker": {
+					"$id": "#/properties/digitalpost/properties/mottaker",
+					"type": "object",
+					"title": "The mottaker schema",
+					"description": "An explanation about the purpose of this instance.",
+					"default": {
+					},
+					"required": [
+						"Identifier"
+					],
+					"properties": {
+						"Identifier": {
+							"$id": "#/properties/digitalpost/properties/mottaker/properties/Identifier",
+							"type": "object",
+							"title": "The Identifier schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": {
+							},
+							"required": [
+								"Authority",
+								"ID"
+							],
+							"properties": {
+								"Authority": {
+									"$id": "#/properties/digitalpost/properties/mottaker/properties/Identifier/properties/Authority",
+									"type": "string",
+									"title": "The Authority schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": ""
+								},
+								"ID": {
+									"$id": "#/properties/digitalpost/properties/mottaker/properties/Identifier/properties/ID",
+									"type": "string",
+									"title": "The ID schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": ""
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"additionalProperties": false
+				},
+				"digitalpostinfo": {
+					"$id": "#/properties/digitalpost/properties/digitalpostinfo",
+					"type": "object",
+					"title": "The digitalpostinfo schema",
+					"description": "An explanation about the purpose of this instance.",
+					"default": {
+					},
+					"required": [
+						"sikkerhetsnivaa",
+						"ikkesensitivtittel"
+					],
+					"properties": {
+						"sikkerhetsnivaa": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/sikkerhetsnivaa",
+							"type": "integer",
+							"title": "The sikkerhetsnivaa schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": 0
+						},
+						"tittel": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/tittel",
+							"type": "string",
+							"title": "The tittel schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": ""
+						},
+						"spraak": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/spraak",
+							"type": "string",
+							"title": "The spraak schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": ""
+						},
+						"virkningsdato": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/virkningsdato",
+							"type": "string",
+							"title": "virkningsdato",
+							"description": "Dato for når et element skal være aktivt.",
+							"default": ""
+						},
+						"aapningskvittering": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/aapningskvittering",
+							"type": "boolean",
+							"title": "The aapningskvittering schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": false
+						},
+						"ikkesensitivtittel": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/ikkesensitivtittel",
+							"type": "string",
+							"title": "The ikkesensitivtittel schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": ""
+						},
+						"varsler": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler",
+							"type": "object",
+							"title": "Varsel",
+							"description": "Informasjon om hvordan postkasseleverandør skal varsle Mottaker om den nye posten. Overstyrer Mottaker sine egne varslingspreferanser",
+							"default": {
+							},
+							"required": [
+							],
+							"properties": {
+								"epostvarsel": {
+									"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/epostvarsel",
+									"type": "object",
+									"title": "The epostvarsel schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": {
+									},
+									"required": [
+										"epostadresse",
+										"varslingstekst",
+										"dageretter"
+									],
+									"properties": {
+										"epostadresse": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/epostvarsel/properties/epostadresse",
+											"type": "string",
+											"title": "The epostadresse schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": ""
+										},
+										"varslingstekst": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/epostvarsel/properties/varslingstekst",
+											"type": "string",
+											"title": "The varslingstekst schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": ""
+										},
+										"dageretter": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/epostvarsel/properties/dageretter",
+											"type": "array",
+											"title": "The dageretter schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": [
+											],
+											"additionalItems": true,
+											"items": {
+												"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/epostvarsel/properties/dageretter/items",
+												"type": "integer",
+												"title": "The items schema",
+												"description": "An explanation about the purpose of this instance.",
+												"default": 0
+											}
+										}
+									},
+									"additionalProperties": false
+								},
+								"smsvarsel": {
+									"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/smsvarsel",
+									"type": "object",
+									"title": "The smsvarsel schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": {
+									},
+									"required": [
+										"mobiltelefonnummer",
+										"varslingstekst",
+										"dageretter"
+									],
+									"properties": {
+										"mobiltelefonnummer": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/smsvarsel/properties/mobiltelefonnummer",
+											"type": "string",
+											"title": "The mobiltelefonnummer schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": ""
+										},
+										"varslingstekst": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/smsvarsel/properties/varslingstekst",
+											"type": "string",
+											"title": "The varslingstekst schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": ""
+										},
+										"dageretter": {
+											"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/smsvarsel/properties/dageretter",
+											"type": "array",
+											"title": "The dageretter schema",
+											"description": "An explanation about the purpose of this instance.",
+											"default": [
+											],
+											"additionalItems": true,
+											"items": {
+												"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/varsler/properties/smsvarsel/properties/dageretter/items",
+												"type": "integer",
+												"title": "The items schema",
+												"description": "An explanation about the purpose of this instance.",
+												"default": 0
+											}
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"additionalProperties": false
+						},
+						"metadataFiler": {
+							"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/metadataFiler",
+							"type": "object",
+							"title": "The metadataFiler schema",
+							"description": "An explanation about the purpose of this instance.",
+							"default": {
+							},
+							"required": [
+								"test.pdf"
+							],
+							"properties": {
+								"test.pdf": {
+									"$id": "#/properties/digitalpost/properties/digitalpostinfo/properties/metadataFiler/properties/test.pdf",
+									"type": "string",
+									"title": "The test.pdf schema",
+									"description": "An explanation about the purpose of this instance.",
+									"default": ""
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"additionalProperties": false
+				},
+				"dokumentpakkefingeravtrykk": {
+					"$id": "#/properties/digitalpost/properties/dokumentpakkefingeravtrykk",
+					"type": "string",
+					"title": "The dokumentpakkefingeravtrykk schema",
+					"description": "An explanation about the purpose of this instance.",
+					"default": ""
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}
