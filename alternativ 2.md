@@ -23,6 +23,8 @@ samt noen av Meldingsformidlers oppgaver flyttes til Postkassene:
 
 Det må etableres en ny transport-protokoll mellom hjørne 1 og hjørne 2.  I tradisjonell PEPPOL-tenking er dette noe som markedsaktørene selv skal ta fram - dvs i prinsippet er dette opp til aksesspunktleverandørene selv å bestemme. Siden Digdir ønsker å gjøre en anskaffelse av aksesspunktleverandørtjenester for formidling av digital post, som de fleste avsendere kommer til å benytte, er det hensiktismessig at Digdir kravstiller en protokoll som skal brukes av denne leverandøren.  Det hindrer ikke andre aktører å implementere andre, egne protokoller.
 
+Protokoll mellom hjørne 2 og 3 er bestemt av PEPPOL, og heter AS4.
+Protokoll mellom hjørne 3 og Postkasse-leverandør bør avtales bilateralt mellom disse aktørene.
 
 # Meldingsflyt overordnet
 
@@ -126,7 +128,9 @@ Forslaget er derfor:
 1. [*Dokumentpakken*, dvs ASiC-pakken](https://docs.digdir.no/dokumentpakke_index.html) beholdes uendret
 2. [*Forretningsmeldingene*](https://docs.digdir.no/sdp_index.html) beholdes også stort sett uendret.
  * Formatet skal endres fra XML til JWT for å bli mer tilpasset vanlig REST-bruk
-3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) flyttes inn i forretningsmeldinga
+ * Maskinporten-token må inkluderes slik at PK-leverandør kan motta dette som bevis på tillatelse til å sende post
+ * Forretningsmeldinga må signeres for å sikre ende-til-ende integritet
+3. [*SBDH*](https://docs.digdir.no/standardbusinessdocument_index.html) JSON-ifiseres inn i forretningsmeldinga
 
 
 # Grensesnittsdefinisjon REST-api
@@ -142,17 +146,21 @@ Aksesspunkt-leverandør skal tilby 2 endepunkt:
 Post sendes i to steg - i første steg sendes forretningsmeldinga:
 ```
 POST /sendmelding/{meldingsid}
+Authorization: Bearer <maskinporten_token>
 
+Body:
 <forretningsmelding i JWT-format>
 ```
 
 og i andre steg sendes / strømmes selve dokumentet.
 ```
 PUT /sendmelding/{meldingsid}
+Authorization: Bearer <maskinporten_token>
 
+Body:
 <ASCI-e>
 ```
-Oppdeling i to steg skaper fleksibilitet og sikrer støtte for store dokumenter, evt. flere dokumenter på samme melding.
+Oppdeling i to steg skaper fleksibilitet og sikrer støtte for store dokumenter, evt. flere dokumenter på samme melding  (for andre meldingstyper enn DigitalPostMelding)
 
 ### Hente kvitteringer:
 
@@ -162,7 +170,7 @@ GET /kvittering/{conversationid}
 GET /kvittering/avsenderidentifikator/{conversationid}
 ```
 
-TODO: openapi-definisjon
+TODO: skrive openapi-definisjon
 
 
 # Forutsetninger:
@@ -175,7 +183,7 @@ Ved bruk av Altinn Autorisasjon til delegering, må det opprettes et "delegation
 
 Det opprettes `processid` i ELMA for de dokumenttyper som trengs støttes.
 - digitalpost
-- fysiskpost
+- fysiskpost  (eller er denne eigentleg berre ein type digitalpost, ref dok?)
 - dpi-kvittering
 - flytt-digitalpost
 
@@ -204,6 +212,7 @@ Avsender må bli satt opp i ELMA som mottaker av DPI-kvitteringsmeldinger.
 TODO: Kva med bruk av Databehandler - er det avsender eller databehdnler som skal registreres i ELMA?
 TODO:  kva viss avsender har fleire fagsystemer som sender digital post (/Avsender/avsenderidentifiktor/ ) - må alle Oslo Kommune sine systemer være kobla til samme aksesspunkt ?
 
+PK-leverandør mottar beskjed manuelt om at det er etablert en ny Avsender.
 
 # Meldingsflyt sende post
 
@@ -227,7 +236,7 @@ Døme på access_token
   }
   "supplier": {
       "Authority": "iso6523-actorid-upis",
-      "ID": "0192:991825827"      // Eventuell Databehandler.
+      "ID": "0192:999888777"      // Eventuell Databehandler.
   }
   "iat": <timestamp>
   "exp": <iat-verdi + 30 sec>
@@ -243,10 +252,9 @@ Avsender kan nå konstruere korrekt **forretningsmelding** (DigitalPostMelding) 
 * token mottatt fra Maskinporten inkluderes i et felt `<maskinporten_token>`.
 * en identifikator for meldingen inkluderes i et felt `<conversation_id>`
 * Databehandler må signere forretningsmeldingen med samme sertifikat som benyttes til å signere Dokumentpakke.
-  * TODO: er denne signert idag, hvilke regler for XML-signering gjelder?
+  * TODO: er denne signert idag, hvilke regler for XML-signering gjelder - hvordan får PK-leverandør vite sertifikatet slik at full X509-validering + orgno-sjekk kan skje?
 
-
-TODO: er det lov for Avsender å sende flere meldinger på samme conversation-id ?
+TODO: er det lov idag for Avsender å sende flere meldinger på samme conversation-id for DigitalPostMelding?
 
 TODO: hvordan finnes print-leverandør?  kan det være flere? dersom ja,  er det avsender eller aksesspunktleverandør som bestemmer hvilken som skal brukes?
 
@@ -255,24 +263,30 @@ TODO: hvordan finnes print-leverandør?  kan det være flere? dersom ja,  er det
 
 Avsender kan konstrukere korrekt URL mot aksespunktvet nå også hvilken forretningsmelding som skal sendes (fysisk eller digital).
 
+
+
+Post sendes i to steg - i første steg sendes forretningsmeldinga:
 ```
-POST /dpi/send/digitalpost/{postkasseleverandør-orgno}/{conversationid}
+POST /sendmelding/{meldingsid}
 Host: api.aksesspunktleveradandør.no
-Content-Type: application/xml
-Authorization: Bearer <maskinporten_token m/ dpi:send scope>
+Content-Type: application/jwt
+Authorization: Bearer <maskinporten_token>
 
-<DigitalPostMelding>
-
---DPI-separator
-Content-Disposition: form-data; name="dokumentpakke"
-Content-Transfer-Encoding: chunked
-
-<ASiC dokumentpakke; stor klump med alle dokument og vedlegg>
-
+Body:
+<forretningsmelding i JWT-format>
 ```
 
+og i andre steg sendes / strømmes selve dokumentet.
+```
+PUT /sendmelding/{meldingsid}
+Host: api.aksesspunktleveradandør.no
+Content-Type: vnd.etsi.asic-e+zip
+Authorization: Bearer <maskinporten_token>
 
-TODO: finst det betre handtering av store dok og/eller mange vedlegg ?  Gjenbruk Espen sine prosseser som integrasjonspunktet allereie har implementert.
+Body:
+<ASCI-e>
+```
+
 
 
 ### 3: Aksesspunkt-leverandør mottek melding
