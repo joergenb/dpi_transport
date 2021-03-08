@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<StandardBusinessDocument xmlns="http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader">
+  <StandardBusinessDocumentHeader>
+    <HeaderVersion>1.0</HeaderVersion>
+    <Sender>
+      <Identifier Authority="iso6523-actorid-upis">0192:810418052</Identifier>
+    </Sender>
+    <Receiver>
+      <Identifier Authority="iso6523-actorid-upis">0088:TBCNTRL00002</Identifier>
+    </Receiver>
+    <DocumentIdentification>
+      <Standard>urn:no:digdir:digitalpost:xsd:digital::dpi</Standard>
+      <TypeVersion>2.1</TypeVersion>
+      <InstanceIdentifier>PNO000001-5-20200120T090717</InstanceIdentifier>
+      <Type>Digitalpost</Type>
+      <CreationDateAndTime>2020-01-20T09:07:17.589Z</CreationDateAndTime>
+    </DocumentIdentification>
+    <BusinessScope>
+      <Scope>
+        <Type>DOCUMENTID</Type>
+        <InstanceIdentifier>urn:no:digdir:digitalpost:xsd:digital::dpi</InstanceIdentifier>
+      </Scope>
+      <Scope>
+        <Type>PROCESSID</Type>
+        <InstanceIdentifier>urn:no:digdir:profile:digitalpost:innbygger:ver1.0</InstanceIdentifier>
+      </Scope>
+    </BusinessScope>
+  </StandardBusinessDocumentHeader>
+  <digitalPost xmlns="http://begrep.difi.no/sdp/schema_v10"
+               xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://begrep.difi.no/sdp/schema_v10 ../xsd/sdp-melding.xsd ">    
+    <avsender>
+      <organisasjon>9908:123456789</organisasjon>
+      <avsenderidentifikator>123456789-A</avsenderidentifikator>
+      <fakturaReferanse>ØK1</fakturaReferanse>
+    </avsender>
+    <mottaker>
+      <person>
+        <personidentifikator>17051400000</personidentifikator>
+        <postkasseadresse>ola.nordmann#0ABC</postkasseadresse>
+      </person>
+    </mottaker>
+    <digitalPostInfo>
+      <virkningsdato>2014-05-17</virkningsdato>
+      <aapningskvittering>false</aapningskvittering>
+      <sikkerhetsnivaa>3</sikkerhetsnivaa>
+      <ikkeSensitivTittel lang="no">Hurra for 17. mai</ikkeSensitivTittel>
+      <varsler>
+        <epostVarsel>
+          <epostadresse>ola@example.com</epostadresse>
+          <varslingsTekst lang="no">Viktig melding fra Staten i din digitale postkasse</varslingsTekst>
+          <repetisjoner>
+            <dagerEtter>0</dagerEtter>
+            <dagerEtter>7</dagerEtter>
+          </repetisjoner>
+        </epostVarsel>
+        <smsVarsel>
+          <mobiltelefonnummer>12345678</mobiltelefonnummer>
+          <varslingsTekst lang="no">Viktig melding fra Staten</varslingsTekst>
+          <repetisjoner>
+            <dagerEtter>1</dagerEtter>
+          </repetisjoner>
+        </smsVarsel>
+      </varsler>
+    </digitalPostInfo>
+    <dokumentpakkefingeravtrykk>
+      <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+      <ds:DigestValue />
+    </dokumentpakkefingeravtrykk>
+    <jwt></jwt>
+    <maskinportentoken></maskinportentoken>
+    <BinaryContent xmlns="http://peppol.eu/xsd/ticc/envelope/1.0" mimeType="application/vnd.etsi.asic-e+zip" encoding="UTF-8">
+        ABCD45678922 ...
+    </<BinaryContent>
+  </digitalPost>
+</StandardBusinessDocument>
