@@ -14,7 +14,7 @@
                     "value": "0192:<orgnr>"
                 }
             }],
-            "documentIdentification": {                
+            "documentIdentification": {
                 "standard": "urn:no:digdir:digitalpost:xsd:digital::dpi",
                 "typeVersion": "1.0",
                 "instanceIdentifier": "ff88849c-e281-4809-8555-7cd54952b916",
@@ -35,8 +35,8 @@
                     }
                 ]
             }
-        },        
-        "digitalpost":{                
+        },
+        "digitalpost":{
             "avsender": {
                 "Identifier": {
                     "Authority": "iso6523-actorid-upis",
@@ -53,11 +53,11 @@
             "digitalpostinfo" : {
                 "sikkerhetsnivaa": 3,
                 "tittel": "",
-                "spraak": "NO",                                     
+                "spraak": "NO",
                 "virkningsdato": "",
                 "aapningskvittering": false ,
                 "ikkesensitivtittel": "ikkeSensitivTittel",
-                "varsler": { 
+                "varsler": {
                     "epostvarsel":{
                         "epostadresse" : "test@epost.no",
                         "varslingstekst" : "Dette er en varslingstekst",
@@ -67,15 +67,15 @@
                         "mobiltelefonnummer" : "test@epost.no",
                         "varslingstekst" : "Dette er en varslingstekst",
                         "dageretter" : [1,7]
-                    }                    
+                    }
                 },
-                "metadataFiler": { 
+                "metadataFiler": {
                     "test.pdf": "test-metadata.xml"
-                }                              
-            },  
+                }
+            },
             "dokumentpakkefingeravtrykk": "5f2652040b33bccfd8c5f06e2beffc1ab822830807e8d0f0b721503e60df0eb6",
-            "maskinportentoken" : "aølkdsølkdsj=="
-        }            
-               
+            "maskinportentoken" : "eyJhbGciO...slkdsj=="
+        }
+
     }
 }
