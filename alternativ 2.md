@@ -245,7 +245,7 @@ Døme på access_token
 
 Dersom avsender er sin egen Databehandler så mangler tokenet `supplier`-claimet.
 
-Avsender slår opp i KRR og finner hvilken PK-leverandør som innbygger benytter - og vet derigjennom om det skal sendes digital eller fysisk post
+Avsender slår opp i KRR og finner hvilken PK-leverandør som innbygger benytter - og vet derigjennom om det skal sendes digital eller fysisk post.
 
 Avsender kan nå konstruere korrekt **forretningsmelding** (DigitalPostMelding) etter [dagens regler](https://docs.digdir.no/sdp_digitalpostmeldinger.html), men med følgende tillegg:
 
@@ -261,11 +261,7 @@ TODO: hvordan finnes print-leverandør?  kan det være flere? dersom ja,  er det
 
 ## 2:   Avsender sender post-melding
 
-Avsender kan konstrukere korrekt URL mot aksespunktvet nå også hvilken forretningsmelding som skal sendes (fysisk eller digital).
-
-
-
-Post sendes i to steg - i første steg sendes forretningsmeldinga:
+Avsender lager nå en unik meldingsid, og sender så posten  i to steg - i første steg sendes forretningsmeldinga:
 ```
 POST /sendmelding/{meldingsid}
 Host: api.aksesspunktleveradandør.no
@@ -291,7 +287,7 @@ Body:
 
 ### 3: Aksesspunkt-leverandør mottek melding
 
-Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).  
+Aksesspunktleverandør (APL) må gjennomføre ei teknisk validering av Maskinporten-tokenet ihht Oauth-standarden (ustedet av Maskinporten, gyldig signatur, ikkje utløpt).  
 - Utgått token medfører 401-respons
 - Gyldig token men som mangler "dpi:send"-scope eller avsender med manglande avtale med APL -> 403 repons
 
@@ -302,26 +298,21 @@ Aksesspunktleverandør må videre validere at:
 * `meldingsid` ikkje er forsøkt brukt tidlegare.
 
 
-TODO: skal APL kva med PUT og DELETE på tidlegare innsendt melding
-
-
-Aksesspunktleverandør lagrer converstation-id og tilhørende avsender/databehandler, slik at kvitteringsmeldinger og feilmeldinger relatert til meldingen kan håndteres.
+Aksesspunktleverandør lagrer converstation-id og tilhørende avsender/databehandler og avsenderidentifikator, slik at kvitteringsmeldinger og feilmeldinger relatert til meldingen kan håndteres, og fagsystemet kan etterspørre status.
 
 
 ### 4: Aksesspunkt-leverandør i hjørne 2 sender meldinga vidare til hjørne 3
 
-APL mapper `meldingstype` i URL til riktig processid.  
-APL slår opp i ELMA på processid og PK-leverndørs orgno.
+APL mapper `meldingstype` i SBDH-delen av forretningmelding til riktig processid.  
+APL slår opp i ELMA på processid og PK-leverandørs orgno (=receiver i SBDH-delen av forretningsmeldinga) og får hvem som er hjørne 3 for den aktuelle PK-leverandøren.
 
-APL kan nå konstrurere en PEPPOL-SBDH:
-
-TODO: hvordan adresseres C3?
-TODO: hvordan får C3 vite at denne meldingen skal til C4 ?
-
-Dvs:  
-* SBDH `Receiever` settes lik ?
-* SBDH `processid` settes lik `processid`
-* SBDH `Sender` settes lik  (Avsender / Databehandler)?
+APL kan nå konstrurere en PEPPOL-melding. Dvs:  
+* Pakke forretningmelding og dokumentpakke om til avtalt payload-format
+  * TODO: bestemme payload-format over PEPPOL for digitalpostmeldinger (asic-i-asic, eller sbd+asci, eller ?)
+* Lage PEPPOL-konvolutt ("ytre" SBDH)
+  * SBDH `Receiever` settes lik pk-leverandør orgno (?)
+  * SBDH `processid` settes lik `processid`
+  * SBDH `Sender` settes lik  (TODO: Avsender eller Databehandler)?
 
 TODO:  Er det behov for å kunne spore at melding er mistet mellom hjørne 2 og hjørne 3.  Hva vet Digdir i såfall som kan hjelpe slik feilsøking?
 
@@ -329,12 +320,13 @@ TODO:  Er det behov for å kunne spore at melding er mistet mellom hjørne 2 og 
 
 TODO: C3 trenger å vite om meldingen skal til Digipost eller eBoks (Er dette Receiver i SBDH?)
 
-C3 og C4 avtaler selv protokoll seg i mellom.  De kan gjerne gjenbruke C1-C2 REST-grensesnittet definert over, men må finne egen sikringsmekanisme (egen oauth2 autorisasjonsserver, eller bare bruke 2-vegs tls).
+C3 og C4 avtaler selv protokoll seg i mellom.  De kan gjerne gjenbruke C1-C2 REST-grensesnittet definert over, men må finne egen sikringsmekanisme (egen oauth2 autorisasjonsserver, eller bare bruke 2-vegs tls).  (Vi anbefalar ikke at de bruker maskinporten-tokenet, da dette kan ha utløpt undervegs.)
 
 
 ### 6: Hjørne 4 mottek meldinga og puttar i postkassen til innnbygger
 
 Ved mottak av melding, må postkasse-leverandør validere ende-til-ende integritet, dvs:
+
 a: at DigitalPostMelding er signert av Avsender(eller Databehandler) og inneholder en digest for tilhørende dokumentpakke
 b: at dokumentpakken er signert av Avsender(eller Databehandler)
 c: regne ut digest av dokumentpakken og kontrollere at utrekna digest stemmer med påstått verdi i forretningsmeldinga
