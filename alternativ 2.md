@@ -276,3 +276,9 @@ TODO: kva viss det er fleire fagsystemer hjå Avsender som sender Digtal Post - 
 # 2-vegs svar
 
 TODO
+
+# Annet
+
+TODO: Bør man legge til mer info i kvitteringer for routing tilbake til avsender systeme. Feks avsenderidentifikator i retur
+
+TODO: Trenger man et statusgrensesnitt der man kan se transportstatus på meldingen fra C2-C3
