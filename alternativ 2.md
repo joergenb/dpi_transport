@@ -88,6 +88,11 @@ URL på formen
 GET /kvittering/{conversationid}
 GET /kvittering/avsenderidentifikator/{conversationid}
 ```
+### Se status på en melding
+Gir en statuskode på hva som har skjedd med den sendte meldinga.
+```
+GET /status/{conversationid}
+```
 
 ### API-definisjoner:
 
@@ -101,7 +106,7 @@ GET /kvittering/avsenderidentifikator/{conversationid}
 
 ## PEPPOL (hjørne 2-> 3)
 
-TODO: link til relevant PEPPOL dokumentasjon
+tbd
 
 ## Hjørne 3 -> Postkasse-leverandør
 
@@ -123,8 +128,6 @@ Det opprettes `processid` i ELMA for de dokumenttyper som trengs støttes.
 - flytt-digitalpost
 
 
-TODO: trengs det opprettes noe mer ?
-
 
 ### Oppsett av PK-leverandør
 
@@ -141,13 +144,10 @@ Alt 2: Avsender som nyttar systemleverandør/databehandlar, må istaden logge in
 
 Avsender (evt. systemleverandør) inngår so ein avtale med ein aksesspunkt-leverandør.  Fagsystemet blir konfigureret og integerert mot aksesspunktleverandør.
 
-TODO: noko om oppsett av Integrasjonspunktet?
-
 Avsender må bli satt opp i ELMA som mottaker av DPI-kvitteringsmeldinger. Dette gjør aksesspunktleverandør.
 
 PK-leverandør mottar beskjed manuelt fra Digdir om at det er etablert en ny Avsender.
 
-TODO: Kva med bruk av Databehandler - er det avsender eller databehdnler som skal registreres i ELMA?
 TODO:  kva viss avsender har fleire fagsystemer som sender digital post (/Avsender/avsenderidentifiktor/ ) - må alle Oslo Kommune sine systemer være kobla til samme aksesspunkt ?
 
 
@@ -214,7 +214,7 @@ sequenceDiagram
   C3->>PK: levere melding (bilateral protokoll)
   deactivate C3
 
-  note right of PK: validere og putte i innbyggers postkasse
+  note over  PK: validere og putte i innbyggers postkasse
 
   note over PK,A: kvitteringer
 
@@ -284,12 +284,17 @@ Avsender kan nå konstruere korrekt **forretningsmelding** (DigitalPostMelding) 
 * Token mottatt fra Maskinporten inkluderes i et felt `maskinporten_token` under `digitalpost`
 * Hele SBD'en må signeres på meldingsnivå for å sikre ende-til-ende integritet, og den må defor da bli en JWT.
   * Databehandler må signere forretningsmeldingen med samme sertifikat som benyttes til å signere Dokumentpakke.
-  * TODO: er denne signert idag, hvilke regler for XML-signering gjelder - hvordan får PK-leverandør vite sertifikatet slik at full X509-validering + orgno-sjekk kan skje?
+  * TODO: hvordan får PK-leverandør vite sertifikatet slik at full X509-validering + orgno-sjekk kan skje?
 
-**Eksempel**: Se https://github.com/joergenb/dpi_transport/blob/main/Samples/DIGITALPOST_DPI_1_0_Sample.json for et eksempel med digital post. `receiver` er her PK-leverandør sitt orgno.
- Se https://github.com/joergenb/dpi_transport/blob/main/Samples/FYSISKPOST_PRINT_1_0_Sample.json for eksempel med digital post. `receiver` er her org.no til printtjeneste-leverandør.
+Regler for hvilke organisasjonsnummer som skal på ulike steder i meldingsstrukturen videreføres, se [eksempelet om Bunadsrådet og Acos i eksisterende dokumentasjon](https://docs.digdir.no/sdp_meldingsformat.html?h=bunadsr%C3%A5det#p%C3%A5vegne-eksempel).
 
-Avsender lager nå en unik meldingsid, og sender så posten  i to steg - i første steg sendes forretningsmeldinga:
+**Eksempel på forretningsmeldinger**:
+* Se https://github.com/joergenb/dpi_transport/blob/main/Samples/DIGITALPOST_DPI_1_0_Sample.json for et eksempel med digital post. `receiver` er her PK-leverandør sitt orgno.
+* Se https://github.com/joergenb/dpi_transport/blob/main/Samples/FYSISKPOST_PRINT_1_0_Sample.json for eksempel med fysisk post. `receiver` er her org.no til printtjeneste-leverandør.
+
+
+
+Avsender lager nå til slutt en unik meldingsid, og sender så posten  i to steg - i første steg sendes forretningsmeldinga:
 ```
 POST /sendmelding/{meldingsid}
 Host: api.aksesspunktleveradandør.no
@@ -312,9 +317,7 @@ Body:
 ```
 
 
-TODO: er det lov idag for Avsender å sende flere meldinger på samme conversation-id for DigitalPostMelding?
 
-TODO: hvordan finnes print-leverandør?  kan det være flere? dersom ja,  er det avsender eller aksesspunktleverandør som bestemmer hvilken som skal brukes?  (sidan leverandør = `receiver` inngår i signert forretningsmelding, så er det vel i utg.punktet Avsender som bestemmer (og som må finne ut av dette.  Kan evt. oppgi aksesspunkt-leverandør sitt orgno som receiver, og avtaleregulere at denne tar seg av sending ? Må vel også henge sammen med KRR sitt print-sertifikat-tjeneste og kryptering av fysisk post...))
 
 
 
@@ -342,7 +345,7 @@ APL slår opp i ELMA på processid og PK-leverandørs orgno (=receiver i SBDH-de
 
 APL kan nå konstrurere en PEPPOL-melding. Dvs:  
 * Pakke forretningmelding og dokumentpakke om til avtalt payload-format
-  * TODO: bestemme payload-formatet for digitalpostmeldinger slik det skal transporteres over PEPPOL  (asic-i-asic, eller sbd+asci, eller ?, og (potensielt) mottas av PK-leverandør)
+  *
 * Lage PEPPOL-konvolutt ("ytre" SBDH)
   * SBDH `Receiever` settes lik pk-leverandør orgno (?)
   * SBDH `processid` settes lik `processid`
@@ -351,7 +354,7 @@ APL kan nå konstrurere en PEPPOL-melding. Dvs:
 **Eksempel**: Et mulig transport-format i PEPPOL kan se ut som her: https://github.com/joergenb/dpi_transport/blob/main/Samples/DIGITALPOST_DPI_1_0_Minimal_Sample.xml
 
 
-TODO:  Er det behov for å kunne spore at melding er mistet mellom hjørne 2 og hjørne 3.  Hva vet Digdir i såfall som kan hjelpe slik feilsøking?
+
 
 ### 5: Hjørne 3 mottek meldinga, og sender vidare til hjørne 4
 
@@ -383,8 +386,8 @@ PK-leverandør må kunne asynkront sende kvittering tilbake i C3 -> C2 -> C1.  (
 
 Feltet `conversation_id` kobler sammen en kvittering med tilhørende DigitalPostMelding. Det er lov å sende flere kvitteringer tilhørene en og samme conversation_id.
 
-PK-leverandør lager en **forretningsmelding** (LeveringsKvittering, VarslingFeilet, Mottak, ReturPost) etter dagens regler, men med endring tilsvarnde det som ble skissert i steg 2. Dvs.:
-* Format skal være JSON, og følge skjema-definisjonen her: TODO
+PK-leverandør lager en **forretningsmelding** (LeveringsKvittering, VarslingFeilet, Mottak, ReturPost) etter dagens regler, men med endring tilsvarende det som ble skissert i steg 2. Dvs.:
+* Format skal være JSON, og følge skjema-definisjonen.
   * PK-leverandør legger til Avsenders orgno i feltet `Avsender`
   * PK-leverandør legger til evt. Databehandlers orgno i feltet `Databehandler`
 
